@@ -69,6 +69,7 @@ class Spider(pygame.sprite.Sprite):
         if self.dir == 'bottom':
             self.speedx = 0
             self.speedy = -2
+
         if self.dir == 'left':
             self.speedx = -2
             self.speedy = 0
