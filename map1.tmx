@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="15" height="9" tilewidth="80" tileheight="80">
+ <tileset firstgid="1" name="bush_tile 1" tilewidth="80" tileheight="80">
+  <image source="C:/Users/user/Downloads/image/tile map/bush_tile 1.png" width="80" height="80"/>
+ </tileset>
+ <tileset firstgid="2" name="bush_tile_tower" tilewidth="80" tileheight="80">
+  <image source="C:/Users/user/Downloads/image/tile map/bush_tile_tower.png" width="80" height="80"/>
+ </tileset>
+ <tileset firstgid="3" name="grass_tile_1" tilewidth="80" tileheight="80">
+  <image source="C:/Users/user/Downloads/image/tile map/grass_tile_1.png" width="80" height="80"/>
+ </tileset>
+ <tileset firstgid="4" name="top" tilewidth="80" tileheight="80">
+  <image source="C:/Users/user/Downloads/image/tile map/top.png" width="80" height="80"/>
+ </tileset>
+ <tileset firstgid="5" name="bottom" tilewidth="80" tileheight="80">
+  <image source="C:/Users/user/Downloads/image/tile map/bottom.png" width="80" height="80"/>
+ </tileset>
+ <tileset firstgid="6" name="left" tilewidth="80" tileheight="80">
+  <image source="C:/Users/user/Downloads/image/tile map/left.png" width="80" height="80"/>
+ </tileset>
+ <tileset firstgid="7" name="right" tilewidth="80" tileheight="80">
+  <image source="C:/Users/user/Downloads/image/tile map/right.png" width="80" height="80"/>
+ </tileset>
+ <layer name="Слой тайлов 1" width="15" height="9">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYKQAswMxMxJmhYozEZBnhPIZyeQzo9lDLH8o2guiWQiEKy55SuIWAAd3APU=
+  </data>
+ </layer>
+</map>
