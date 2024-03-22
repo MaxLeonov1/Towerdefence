@@ -15,3 +15,6 @@ bottom_arrow_image = pygame.image.load('image/tile map/bottom.png').convert_alph
 left_arrow_image = pygame.image.load('image/tile map/left.png').convert_alpha()
 right_arrow_image = pygame.image.load('image/tile map/right.png').convert_alpha()
 enemy1_image = pygame.image.load('image/enemy/right.png').convert_alpha()
+panel_image = pygame.image.load('image/panel.jpg').convert_alpha()
+tower_1_on_image = pygame.image.load('image/tower 1/1_on.png').convert_alpha()
+tower_1_of_image = pygame.image.load('image/tower 1/1_of.png').convert_alpha()
