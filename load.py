@@ -5,6 +5,7 @@ def load_image(directory):
     files = os.listdir(directory)
     for i in files:
         image = pygame.image.load(f'{directory}/{i}').convert_alpha()
+        image_list.append(image)
     return image_list
 
 bush_image = pygame.image.load('image/tile map/bush_tile 1.png').convert_alpha()
@@ -17,4 +18,7 @@ right_arrow_image = pygame.image.load('image/tile map/right.png').convert_alpha(
 enemy1_image = pygame.image.load('image/enemy/right.png').convert_alpha()
 panel_image = pygame.image.load('image/panel.jpg').convert_alpha()
 tower_1_on_image = pygame.image.load('image/tower 1/1_on.png').convert_alpha()
-tower_1_of_image = pygame.image.load('image/tower 1/1_of.png').convert_alpha()
+tower_1_off_image = pygame.image.load('image/tower 1/1_of.png').convert_alpha()
+update_sing_image = pygame.image.load('image/upgrade.png').convert_alpha()
+tower_1_2_image = pygame.image.load('image/tower 1_1/tower/1.png').convert_alpha()
+bullet_image_1_1 = pygame.image.load('image/tower 1/bullet 1.png').convert_alpha()
