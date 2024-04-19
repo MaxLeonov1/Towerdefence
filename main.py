@@ -18,6 +18,7 @@ from load import *
 
 
 money = 1000
+heathpoint = 5
 f1 = pygame.font.Font(None,36)
 
 class Bush(pygame.sprite.Sprite):
@@ -42,15 +43,20 @@ class Towerhill(pygame.sprite.Sprite):
         self.rect.x = pos[0]
         self.rect.y = pos[1]
         self.timer_click = 0
+        self.tower = False
+
+
 
     def update(self):
         global money
         self.timer_click += 1
-        if self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom and tower_shop.buy == True and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.5 :
-            tower = Tower_1(tower_1_on_image,(self.rect.centerx,self.rect.centery))
+        if (self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom\
+                and tower_shop.buy == True and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.5 and self.tower == False) :
+            tower = Tower_1(tower_1_on_image,(self.rect.centerx,self.rect.centery),tower_1_1_animage,tower_1_2_animage,40)
             tower_active_group.add(tower)
             money -= 300
             self.timer_click = 0
+            self.tower = True
 class Arrow(pygame.sprite.Sprite):
     def __init__(self, image, pos, dir):
         pygame.sprite.Sprite.__init__(self)
@@ -67,7 +73,7 @@ class Spawner():
         self.spawn_kd += 1
         if self.spawn_kd / FPS >= 1:
             spider = Spider(enemy1_image, self.pos_s)
-            spider.add(spider_group)
+            spider_group.add(spider)
             self.spawn_kd = 0
 class Spider(pygame.sprite.Sprite):
     def __init__(self, image, pos):
@@ -79,8 +85,24 @@ class Spider(pygame.sprite.Sprite):
         self.dir = 'right'
         self.speedx = 2
         self.speedy = 0
+        self.hp = 100
+
+    def damage(self):
+        global heathpoint,money
+        if self.rect.right >= WIDTH+50:
+            self.kill()
+            heathpoint -= 1
+        if self.hp <= 0:
+            self.kill()
+            money += 10
+
+        if self.hp < 100 :
+            width_hp = 48 * (self.hp / 100)
+            pygame.draw.rect(sc, 'black', (self.rect.x - 10, self.rect.y - 13, 50, 10), 2)
+            pygame.draw.rect(sc, 'green', (self.rect.x - 8, self.rect.y - 12, width_hp, 7))
 
     def update(self):
+        self.damage()
         if self.dir == 'right':
             self.speedx = 2
             self.speedy = 0
@@ -101,7 +123,7 @@ class Spider(pygame.sprite.Sprite):
 
                 self.dir = tile.dir
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self,image,pos,speed,damage,enemy):
+    def __init__(self,image,pos,speed,damage,enemy,animage):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.damage = damage
@@ -112,12 +134,36 @@ class Bullet(pygame.sprite.Sprite):
         self.end_pos = pygame.math.Vector2(pos[2], pos[3])
         self.velocity = (self.end_pos - self.start_pos).normalize()*self.speed
         self.rect.center = self.start_pos
+        self.animage = animage
+        self.frame = 0
+        self.anime = False
+        self.timer_anime = 0
+        self.kd_collide = 0
+        self.flag_damage = True
+
+
+    def animation(self):
+        self.image = self.animage[self.frame]
+        if self.anime:
+            self.timer_anime += 1
+            if self.timer_anime / FPS > 0.02:
+                if self.frame == len(self.animage) - 1:
+                    self.kill()
+                else:
+                    self.frame += 1
+                self.timer_anime = 0
 
     def update(self):
+        self.animation()
         self.rect.center += self.velocity
-        if self.rect.center == self.end_pos:
-            self.kill()
-            self.enemy.kill()
+        #print(self.kd_collide)
+        if pygame.sprite.spritecollide(self, spider_group, False) and self.flag_damage:
+            #print(345345)
+            self.kd_collide = 0
+            self.enemy.hp -= self.damage
+            self.anime = True
+            self.velocity = self.velocity*0
+            self.flag_damage = False
 
 
 class Tower_Shop(pygame.sprite.Sprite):
@@ -134,7 +180,7 @@ class Tower_Shop(pygame.sprite.Sprite):
         self.timer_click = 0
 
     def image_change(self):
-        if money<300:
+        if money<=300:
             self.image =self.image_off
         else:
             self.image = self.image_on
@@ -149,7 +195,7 @@ class Tower_Shop(pygame.sprite.Sprite):
             self.timer_click = 0
             #print(self.buy)
         if self.buy:
-            sc.blit(tower_1_on_image,pygame.mouse.get_pos())
+            sc.blit(self.image_on,pygame.mouse.get_pos())
         if money <= 300:
             self.buy = False
     def update(self):
@@ -157,14 +203,16 @@ class Tower_Shop(pygame.sprite.Sprite):
         self.buy_tower()
 
 class Tower_1(pygame.sprite.Sprite):
-    def __init__(self, image, pos):
+    def __init__(self, image, pos,animage1,animage2,damage):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
+        self.animage1 = animage1
+        self.animage2 = animage2
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]-40
         self.rect.y = pos[1]-60
         self.lvl = 1
-        self.damage = 30
+        self.damage = damage
         self.enemy = None
         self.timer_shot = 0
         self.speed = 15
@@ -172,6 +220,10 @@ class Tower_1(pygame.sprite.Sprite):
         self.lvlup_cost = 200
         self.timer_click = 0
         self.current_bullet_image = bullet_image_1_1
+        self.anime = True
+        self.timer_anime = 0
+        self.frame = 0
+        self.animage = self.animage1
 
     def shoot(self):
         self.timer_shot += 1
@@ -192,7 +244,7 @@ class Tower_1(pygame.sprite.Sprite):
             y_1 = self.rect.top
             x_2 = self.enemy.rect.centerx
             y_2 = self.enemy.rect.centery
-            bullet = Bullet(self.current_bullet_image,(x_1,y_1,x_2,y_2),self.speed, self.damage,self.enemy)
+            bullet = Bullet(self.current_bullet_image,(x_1,y_1,x_2,y_2),self.speed, self.damage,self.enemy,bullet_1_1_animage)
             bullet_group.add(bullet)
             self.timer_shot = 0
 
@@ -203,25 +255,41 @@ class Tower_1(pygame.sprite.Sprite):
         self.timer_click += 1
         if money >= self.lvlup_cost*self.lvl and self.lvl<2:
             self.upgrade = True
+        else:
+            self.upgrade = False
         if self.upgrade:
             sc.blit(update_sing_image,(self.rect.x+40,self.rect.y+60))
         if (self.upgrade and  self.rect.x + 20 <= pygame.mouse.get_pos()[0] <= self.rect.x + 80
             and self.rect.y +40 <= pygame.mouse.get_pos()[1] <= self.rect.y +100
                 and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1 and money >= self.lvlup_cost) :
-            self.damage = self.damage*self.lvl
-            self.image = tower_1_2_image
+            self.lvl += 1
+            self.damage = self.damage*math.sqrt(self.lvl)
             self.lvlup_cost = self.lvlup_cost*self.lvl
             self.timer_click = 0
-            self.lvl += 1
             self.upgrade = False
             self.speed = self.speed*math.sqrt(self.lvl)
 
             money -= self.lvlup_cost
 
+    def animation(self):
+        if self.lvl == 1:
+            self.animage = self.animage1
+        if self.lvl == 2:
+            self.animage = self.animage2
+        self.image = self.animage[self.frame]
+        if self.anime:
+            self.timer_anime += 1
+            if self.timer_anime / FPS > 0.05:
+                if self.frame == len(self.animage) - 1:
+                    self.frame = 0
+                else:
+                    self.frame += 1
+                self.timer_anime = 0
 
     def update(self):
         self.shoot()
         self.lvlup()
+        self.animation()
 
 
 
@@ -296,7 +364,9 @@ def game_lvl():
     spider_group.update()
     sc.blit(panel_image, (0, 720))
     money_text = f1.render(f'money:{money}', 1, (180, 180, 180))
-    sc.blit(money_text,(600,780))
+    heal_text = f1.render(f'HP:{heathpoint}',1,(180, 180, 180))
+    sc.blit(money_text,(400,780))
+    sc.blit(heal_text,(700,780))
     tower_shop_group.draw(sc)
     tower_shop_group.update()
     tower_active_group.draw(sc)
