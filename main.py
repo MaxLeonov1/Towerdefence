@@ -14,6 +14,7 @@ HEIGHT = 820
 FPS = 60
 sc = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
+Game = True
 from load import *
 
 
@@ -69,12 +70,14 @@ class Spawner():
     def __init__(self):
         self.spawn_kd = 0
         self.pos_s = (40, 600)
+        self.spawn_amount = 0
     def spawn(self):
         self.spawn_kd += 1
         if self.spawn_kd / FPS >= 1:
             spider = Spider(enemy1_image, self.pos_s)
             spider_group.add(spider)
             self.spawn_kd = 0
+            self.spawn_amount+=1
 class Spider(pygame.sprite.Sprite):
     def __init__(self, image, pos):
         pygame.sprite.Sprite.__init__(self)
@@ -168,7 +171,7 @@ class Bullet(pygame.sprite.Sprite):
 
 class Tower_Shop(pygame.sprite.Sprite):
 
-    def __init__(self, image_on,image_off, pos):
+    def __init__(self, image_on,image_off, pos,price):
         pygame.sprite.Sprite.__init__(self)
         self.image = image_on
         self.image_off = image_off
@@ -178,9 +181,10 @@ class Tower_Shop(pygame.sprite.Sprite):
         self.rect.y = pos[1]
         self.buy = False
         self.timer_click = 0
+        self.price = price
 
     def image_change(self):
-        if money<=300:
+        if money<=self.price:
             self.image =self.image_off
         else:
             self.image = self.image_on
@@ -196,7 +200,7 @@ class Tower_Shop(pygame.sprite.Sprite):
             #print(self.buy)
         if self.buy:
             sc.blit(self.image_on,pygame.mouse.get_pos())
-        if money <= 300:
+        if money <= self.price:
             self.buy = False
     def update(self):
         self.image_change()
@@ -342,8 +346,9 @@ def restart():
     spider_group = pygame.sprite.Group()
     tower_shop_group = pygame.sprite.Group()
     spawner = Spawner()
-    tower_shop = Tower_Shop(tower_1_on_image,tower_1_off_image, (10, 730))
-    tower_shop_group.add(tower_shop)
+    tower_shop = Tower_Shop(tower_1_on_image,tower_1_off_image, (10, 730),300)
+    tower_shop2 = Tower_Shop(tower_2_1_animage[0],tower_2_1_off,(110,730),400)
+    tower_shop_group.add(tower_shop,tower_shop2)
     tower_active_group = pygame.sprite.Group()
     bullet_group = pygame.sprite.Group()
 
@@ -381,11 +386,14 @@ def game_lvl():
 
 
 
+
 restart()
 drawMaps('map1.txt')
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
+    if pygame.key.get_pressed()[pygame.K_SPACE]== True:
+        pass
     game_lvl()
     clock.tick(FPS)

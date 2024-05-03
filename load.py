@@ -25,3 +25,5 @@ bullet_image_1_1 = pygame.image.load('image/tower 1/bullet 1.png').convert_alpha
 tower_1_1_animage = load_image('image/tower 1/tower')
 tower_1_2_animage = load_image('image/tower 1_1/tower')
 bullet_1_1_animage = load_image('image/tower 1/bullet_blow')
+tower_2_1_off = pygame.image.load('image/tower 2/1 off.png').convert_alpha()
+tower_2_1_animage = load_image('image/tower 2/tower')
