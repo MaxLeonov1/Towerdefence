@@ -39,7 +39,7 @@ def buttons():
         sys.exit()
     if (400 <= pygame.mouse.get_pos()[0] <= 800 and 350 <= pygame.mouse.get_pos()[1] <= 450 \
             and pygame.mouse.get_pressed()[0]):
-        runpy.run_path('D:\Towerdefence\main.py')
+        runpy.run_path(f'{os.getcwd()}\main.py')
 
 while True:
     for event in pygame.event.get():

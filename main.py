@@ -18,7 +18,7 @@ Game = True
 from load import *
 
 
-money = 1000
+money = 10000
 heathpoint = 5
 f1 = pygame.font.Font(None,36)
 
@@ -52,10 +52,17 @@ class Towerhill(pygame.sprite.Sprite):
         global money
         self.timer_click += 1
         if (self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom\
-                and tower_shop.buy == True and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.5 and self.tower == False) :
-            tower = Tower_1(tower_1_on_image,(self.rect.centerx,self.rect.centery),tower_1_1_animage,tower_1_2_animage,40)
-            tower_active_group.add(tower)
-            money -= 300
+                and (tower_shop.buy == True or tower_shop2.buy == True) and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.5 and self.tower == False) :
+            if tower_shop.buy == True:
+                tower = Tower_1(tower_1_on_image,(self.rect.centerx,self.rect.centery),tower_1_1_animage,tower_1_2_animage,40)
+                tower_active_group.add(tower)
+                money -= tower_shop.price
+            if tower_shop2.buy == True:
+                #add second lvl animage
+                tower = Tower_1(tower_2_1_animage[0], (self.rect.centerx, self.rect.centery), tower_2_1_animage,
+                                tower_2_1_animage, 50)
+                tower_active_group.add(tower)
+                money -= tower_shop2.price
             self.timer_click = 0
             self.tower = True
 class Arrow(pygame.sprite.Sprite):
@@ -189,19 +196,23 @@ class Tower_Shop(pygame.sprite.Sprite):
         else:
             self.image = self.image_on
     def buy_tower(self):
-
         global money
         self.timer_click += 1
-        if (tower_shop.rect.left <= pygame.mouse.get_pos()[0] <= tower_shop.rect.right and
-                tower_shop.rect.top <= pygame.mouse.get_pos()[1] <= tower_shop.rect.bottom and
+        if (self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and
+                self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom and
                 pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1) :
             self.buy = not self.buy
+            #print(tower_shop2.buy)
             self.timer_click = 0
-            #print(self.buy)
         if self.buy:
             sc.blit(self.image_on,pygame.mouse.get_pos())
         if money <= self.price:
             self.buy = False
+
+
+
+
+
     def update(self):
         self.image_change()
         self.buy_tower()
@@ -338,7 +349,7 @@ def drawMaps(nameFile):
 
 def restart():
     global path_group,bush_group,towerhill_group,arrow_group
-    global spider_group,spider,spawner,tower_shop,tower_shop_group,tower_active_group,bullet_group
+    global spider_group,spider,spawner,tower_shop,tower_shop_group,tower_active_group,bullet_group,tower_shop2
     path_group = pygame.sprite.Group()
     bush_group = pygame.sprite.Group()
     towerhill_group = pygame.sprite.Group()
@@ -347,7 +358,7 @@ def restart():
     tower_shop_group = pygame.sprite.Group()
     spawner = Spawner()
     tower_shop = Tower_Shop(tower_1_on_image,tower_1_off_image, (10, 730),300)
-    tower_shop2 = Tower_Shop(tower_2_1_animage[0],tower_2_1_off,(110,730),400)
+    tower_shop2 = Tower_Shop(tower_2_1_animage[0],tower_2_1_off,(85,730),400)
     tower_shop_group.add(tower_shop,tower_shop2)
     tower_active_group = pygame.sprite.Group()
     bullet_group = pygame.sprite.Group()
