@@ -1,8 +1,6 @@
-import math
 import os
 import runpy
 import sys
-import random
 import pygame
 pygame.init()
 
@@ -31,7 +29,6 @@ def sings():
     pygame.draw.rect(sc, (200, 200, 200), (400, 500, 400, 100))
     sc.blit(exit_text,(420,520))
     pygame.display.update()
-
 
 def buttons():
     if (400 <= pygame.mouse.get_pos()[0] <= 800 and 500 <= pygame.mouse.get_pos()[1] <= 600 \

@@ -15,6 +15,7 @@ FPS = 60
 sc = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 Game = True
+global_buy = False
 from load import *
 
 
@@ -54,13 +55,14 @@ class Towerhill(pygame.sprite.Sprite):
         if (self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom\
                 and (tower_shop.buy == True or tower_shop2.buy == True) and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.5 and self.tower == False) :
             if tower_shop.buy == True:
-                tower = Tower_1(tower_1_on_image,(self.rect.centerx,self.rect.centery),tower_1_1_animage,tower_1_2_animage,40)
+                tower = Tower_1(tower_1_on_image,(self.rect.centerx,self.rect.centery),tower_1_1_animage,tower_1_2_animage,
+                                40,bullet_1_1_animage,bullet_image_1_1,'bullet')
                 tower_active_group.add(tower)
                 money -= tower_shop.price
             if tower_shop2.buy == True:
                 #add second lvl animage
                 tower = Tower_1(tower_2_1_animage[0], (self.rect.centerx, self.rect.centery), tower_2_1_animage,
-                                tower_2_1_animage, 50)
+                                tower_2_2_animage, 50,boom_animage,bullet_image_2,'bomb')
                 tower_active_group.add(tower)
                 money -= tower_shop2.price
             self.timer_click = 0
@@ -80,11 +82,12 @@ class Spawner():
         self.spawn_amount = 0
     def spawn(self):
         self.spawn_kd += 1
-        if self.spawn_kd / FPS >= 1:
+        if self.spawn_kd / FPS >= 0.8 and self.spawn_amount <= 30:
             spider = Spider(enemy1_image, self.pos_s)
             spider_group.add(spider)
             self.spawn_kd = 0
             self.spawn_amount+=1
+
 class Spider(pygame.sprite.Sprite):
     def __init__(self, image, pos):
         pygame.sprite.Sprite.__init__(self)
@@ -133,7 +136,7 @@ class Spider(pygame.sprite.Sprite):
 
                 self.dir = tile.dir
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self,image,pos,speed,damage,enemy,animage):
+    def __init__(self,image,pos,speed,damage,enemy,animage,bullet_type):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.damage = damage
@@ -150,6 +153,7 @@ class Bullet(pygame.sprite.Sprite):
         self.timer_anime = 0
         self.kd_collide = 0
         self.flag_damage = True
+        self.bullet_type = bullet_type
 
 
     def animation(self):
@@ -163,21 +167,37 @@ class Bullet(pygame.sprite.Sprite):
                     self.frame += 1
                 self.timer_anime = 0
 
+    def blow(self):
+        #print(self.rect)
+        if self.bullet_type == 'bullet':
+            if pygame.sprite.spritecollide(self, spider_group, False) and self.flag_damage:
+                # print(345345)
+                self.kd_collide = 0
+                self.enemy.hp -= self.damage
+                self.anime = True
+                self.velocity = self.velocity * 0
+                self.flag_damage = False
+        if self.bullet_type == 'bomb':
+            if pygame.sprite.spritecollide(self, spider_group, False) and self.flag_damage:
+                for enemy in spider_group:
+                    #pass
+                    if math.sqrt((enemy.rect.centerx-self.rect.centerx)**2+
+                                 (enemy.rect.centery-self.rect.centery)**2)<=200:
+                        enemy.hp -= self.damage
+                self.kd_collide = 0
+                self.velocity = self.velocity*0
+                self.flag_damage = False
+                self.anime = True
+
+
     def update(self):
         self.animation()
+        self.blow()
         self.rect.center += self.velocity
         #print(self.kd_collide)
-        if pygame.sprite.spritecollide(self, spider_group, False) and self.flag_damage:
-            #print(345345)
-            self.kd_collide = 0
-            self.enemy.hp -= self.damage
-            self.anime = True
-            self.velocity = self.velocity*0
-            self.flag_damage = False
 
 
 class Tower_Shop(pygame.sprite.Sprite):
-
     def __init__(self, image_on,image_off, pos,price):
         pygame.sprite.Sprite.__init__(self)
         self.image = image_on
@@ -196,11 +216,12 @@ class Tower_Shop(pygame.sprite.Sprite):
         else:
             self.image = self.image_on
     def buy_tower(self):
-        global money
+        global money,global_buy
         self.timer_click += 1
+        #print(global_buy)
         if (self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and
                 self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom and
-                pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1) :
+                pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1)  :
             self.buy = not self.buy
             #print(tower_shop2.buy)
             self.timer_click = 0
@@ -218,7 +239,8 @@ class Tower_Shop(pygame.sprite.Sprite):
         self.buy_tower()
 
 class Tower_1(pygame.sprite.Sprite):
-    def __init__(self, image, pos,animage1,animage2,damage):
+    def __init__(self, image, pos,animage1,animage2,damage,bullet_animage,current_bullet_image,
+                 bullet_type):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.animage1 = animage1
@@ -234,11 +256,13 @@ class Tower_1(pygame.sprite.Sprite):
         self.upgrade = False
         self.lvlup_cost = 200
         self.timer_click = 0
-        self.current_bullet_image = bullet_image_1_1
+        self.current_bullet_image = current_bullet_image
         self.anime = True
         self.timer_anime = 0
         self.frame = 0
         self.animage = self.animage1
+        self.bullet_animage = bullet_animage
+        self.bullet_type = bullet_type
 
     def shoot(self):
         self.timer_shot += 1
@@ -259,7 +283,8 @@ class Tower_1(pygame.sprite.Sprite):
             y_1 = self.rect.top
             x_2 = self.enemy.rect.centerx
             y_2 = self.enemy.rect.centery
-            bullet = Bullet(self.current_bullet_image,(x_1,y_1,x_2,y_2),self.speed, self.damage,self.enemy,bullet_1_1_animage)
+            bullet = Bullet(self.current_bullet_image,(x_1,y_1,x_2,y_2),self.speed, self.damage,self.enemy,
+                            self.bullet_animage,self.bullet_type)
             bullet_group.add(bullet)
             self.timer_shot = 0
 
@@ -391,7 +416,7 @@ def game_lvl():
     bullet_group.update()
     pygame.display.update()
 
-
+pause_text = (pygame.font.Font(None,50)).render(f'Pause',1,(180, 180, 180))
 
 
 
@@ -404,7 +429,9 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-    if pygame.key.get_pressed()[pygame.K_SPACE]== True:
-        pass
-    game_lvl()
+    if pygame.key.get_pressed()[pygame.K_SPACE]== False:
+        game_lvl()
+    else:
+        sc.blit(pause_text,(500,400))
+
     clock.tick(FPS)
