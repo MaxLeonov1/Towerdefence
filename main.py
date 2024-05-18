@@ -2,6 +2,8 @@ import math
 import os
 import sys
 import random
+import time
+#import runpy
 import pygame
 
 
@@ -17,11 +19,18 @@ clock = pygame.time.Clock()
 Game = True
 global_buy = False
 from load import *
+lvl_sc = 'menu'
+prev_lvl_sc = 'menu'
+
+total_enemies = 0
+total_gold = 0
 
 
 money = 10000
 heathpoint = 5
 f1 = pygame.font.Font(None,36)
+f2 = pygame.font.Font(None,40)
+f3 = pygame.font.Font(None, 100)
 
 class Bush(pygame.sprite.Sprite):
     def __init__(self, image, pos):
@@ -54,17 +63,20 @@ class Towerhill(pygame.sprite.Sprite):
         self.timer_click += 1
         if (self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom\
                 and (tower_shop.buy == True or tower_shop2.buy == True) and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.5 and self.tower == False) :
+            #print(pygame.mouse.get_pressed()[0])
             if tower_shop.buy == True:
                 tower = Tower_1(tower_1_on_image,(self.rect.centerx,self.rect.centery),tower_1_1_animage,tower_1_2_animage,
                                 40,bullet_1_1_animage,bullet_image_1_1,'bullet')
                 tower_active_group.add(tower)
                 money -= tower_shop.price
+                tower_shop.buy = False
             if tower_shop2.buy == True:
                 #add second lvl animage
                 tower = Tower_1(tower_2_1_animage[0], (self.rect.centerx, self.rect.centery), tower_2_1_animage,
                                 tower_2_2_animage, 50,boom_animage,bullet_image_2,'bomb')
                 tower_active_group.add(tower)
                 money -= tower_shop2.price
+                tower_shop2.buy = False
             self.timer_click = 0
             self.tower = True
 class Arrow(pygame.sprite.Sprite):
@@ -82,6 +94,7 @@ class Spawner():
         self.spawn_amount = 0
     def spawn(self):
         self.spawn_kd += 1
+        spider = Spider(enemy1_image, self.pos_s)
         if self.spawn_kd / FPS >= 0.8 and self.spawn_amount <= 30:
             spider = Spider(enemy1_image, self.pos_s)
             spider_group.add(spider)
@@ -101,18 +114,21 @@ class Spider(pygame.sprite.Sprite):
         self.hp = 100
 
     def damage(self):
-        global heathpoint,money
+        global heathpoint,money,total_gold,total_enemies
         if self.rect.right >= WIDTH+50:
             self.kill()
             heathpoint -= 1
         if self.hp <= 0:
             self.kill()
             money += 10
+            total_gold += 10
+            total_enemies += 1
 
         if self.hp < 100 :
             width_hp = 48 * (self.hp / 100)
             pygame.draw.rect(sc, 'black', (self.rect.x - 10, self.rect.y - 13, 50, 10), 2)
             pygame.draw.rect(sc, 'green', (self.rect.x - 8, self.rect.y - 12, width_hp, 7))
+
 
     def update(self):
         self.damage()
@@ -210,6 +226,7 @@ class Tower_Shop(pygame.sprite.Sprite):
         self.timer_click = 0
         self.price = price
 
+
     def image_change(self):
         if money<=self.price:
             self.image =self.image_off
@@ -221,8 +238,13 @@ class Tower_Shop(pygame.sprite.Sprite):
         #print(global_buy)
         if (self.rect.left <= pygame.mouse.get_pos()[0] <= self.rect.right and
                 self.rect.top <= pygame.mouse.get_pos()[1] <= self.rect.bottom and
-                pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1)  :
-            self.buy = not self.buy
+                pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1) :
+            for tower in tower_shop_group:
+                if tower.buy == True:
+                    break
+            else:
+
+                self.buy = not self.buy
             #print(tower_shop2.buy)
             self.timer_click = 0
         if self.buy:
@@ -291,7 +313,6 @@ class Tower_1(pygame.sprite.Sprite):
 
     def lvlup(self):
         global money
-        #print(self.lvl)
         self.timer_click += 1
         if money >= self.lvlup_cost*self.lvl and self.lvl<2:
             self.upgrade = True
@@ -301,7 +322,7 @@ class Tower_1(pygame.sprite.Sprite):
             sc.blit(update_sing_image,(self.rect.x+40,self.rect.y+60))
         if (self.upgrade and  self.rect.x + 20 <= pygame.mouse.get_pos()[0] <= self.rect.x + 80
             and self.rect.y +40 <= pygame.mouse.get_pos()[1] <= self.rect.y +100
-                and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1 and money >= self.lvlup_cost) :
+                and pygame.mouse.get_pressed()[0] and self.timer_click / FPS > 0.1 and money >= self.lvlup_cost):
             self.lvl += 1
             self.damage = self.damage*math.sqrt(self.lvl)
             self.lvlup_cost = self.lvlup_cost*self.lvl
@@ -419,19 +440,111 @@ def game_lvl():
 pause_text = (pygame.font.Font(None,50)).render(f'Pause',1,(180, 180, 180))
 
 
+def buttons1():
+    global input_await,lvl_sc,prev_lvl_sc
+    if (400 <= pygame.mouse.get_pos()[0] <= 800 and 350 <= pygame.mouse.get_pos()[1] <= 450
+            and pygame.mouse.get_pressed()[0] and input_await/FPS>=0.5):
+        lvl_sc = 'menu'
+        prev_lvl_sc = 'game'
+
+        input_await = 0
+    if (400 <= pygame.mouse.get_pos()[0] <= 800 and 500 <= pygame.mouse.get_pos()[1] <= 600 \
+            and pygame.mouse.get_pressed()[0] and input_await/FPS>=0.5):
+        lvl_sc = 'stats'
+        input_await = 0
+        prev_lvl_sc = 'game'
+
+def buttons2():
+    global lvl_sc,input_await,prev_lvl_sc
+    if (400 <= pygame.mouse.get_pos()[0] <= 800 and 300 <= pygame.mouse.get_pos()[1] <= 380 \
+        and pygame.mouse.get_pressed()[0] and input_await/FPS>=0.5):
+        lvl_sc = 'game'
+        prev_lvl_sc = 'menu'
+        input_await = 0
+    if (400 <= pygame.mouse.get_pos()[0] <= 800 and 400 <= pygame.mouse.get_pos()[1] <= 480 \
+            and pygame.mouse.get_pressed()[0] and input_await/FPS>=0.5):
+        lvl_sc = 'stats'
+        prev_lvl_sc = 'menu'
+        input_await = 0
+    if (400 <= pygame.mouse.get_pos()[0] <= 800 and 500 <= pygame.mouse.get_pos()[1] <= 580 \
+            and pygame.mouse.get_pressed()[0] and input_await/FPS>=0.5):
+        sys.exit()
+        input_await = 0
+
+def buttons3():
+    global input_await,prev_lvl_sc,lvl_sc
+    if (1030 <= pygame.mouse.get_pos()[0] <= 1130 and 700 <= pygame.mouse.get_pos()[1] <= 750 \
+        and pygame.mouse.get_pressed()[0] and input_await/FPS>=0.5):
+        input_await = 0
+        if prev_lvl_sc == 'menu':
+            lvl_sc = 'menu'
+        if prev_lvl_sc == 'game':
+            lvl_sc = 'game'
 
 
+def stats():
+    global total_enemies,total_gold
+    sc.fill('grey')
+    pygame.draw.rect(sc,(100,100,100),(50,50,1100,720))
+    money_text = f1.render(f'Total Money:{total_gold}',1,'grey')
+    sc.blit(money_text,(100,100))
+    enemy_text = f1.render(f'Total Enemies:{total_enemies}',1,'grey')
+    sc.blit(enemy_text, (100, 150))
+    pygame.draw.rect(sc, (200, 200, 200), (1030, 700, 100, 50))
+    return_text = f2.render('Back', 1, (100, 100, 100))
+    sc.blit(return_text, (1040, 710))
+    buttons3()
 
+    pygame.display.update()
+def sings():
+    sc.fill('grey')
+    name_text = f3.render('TOWERDEFENCE',1,(100,100,100))
+    game_text = f2.render('Game',1,(100,100,100))
+    exit_text = f2.render('Exit',1,(100,100,100))
+    stats_text = f2.render('Statistics', 1, (100, 100, 100))
+    sc.blit(name_text,(310,200))
+    pygame.draw.rect(sc,(200,200,200),(400,300,400,80))
+    sc.blit(game_text, (420, 320))
+    pygame.draw.rect(sc, (200, 200, 200), (400, 400, 400, 80))
+    sc.blit(stats_text,(420,420))
+    pygame.draw.rect(sc, (200, 200, 200), (400, 500, 400, 80))
+    sc.blit(exit_text, (420, 520))
+    buttons2()
+    pygame.display.update()
 
+input_await = 0
 restart()
+spider_group.add(Spider(enemy1_image, (40, 600)))
 drawMaps('map1.txt')
 while True:
+    #print(pygame.mouse.get_pressed()[0])
+    input_await += 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-    if pygame.key.get_pressed()[pygame.K_SPACE]== False:
-        game_lvl()
-    else:
-        sc.blit(pause_text,(500,400))
 
+    if lvl_sc == 'menu':
+        sings()
+    elif lvl_sc == 'game':
+        if (pygame.key.get_pressed()[pygame.K_SPACE] == False and len(spider_group) > 0):
+            print(1)
+            game_lvl()
+        elif (pygame.key.get_pressed()[pygame.K_SPACE] == True):
+            pause_text = f3.render(f'Pause', 1, (10, 10, 10))
+            sc.blit(pause_text, (500, 200))
+            game_text = f2.render('Menu', 1, (100, 100, 100))
+            stats_text = f2.render('Statistics', 1, (100, 100, 100))
+            pygame.draw.rect(sc, (200, 200, 200), (400, 350, 400, 100))
+            pygame.draw.rect(sc, (200, 200, 200), (400, 500, 400, 100))
+            sc.blit(game_text, (420, 370))
+            sc.blit(stats_text, (420, 520))
+            pygame.display.update()
+            buttons1()
+        elif len(spider_group) == 0:
+            pass
+    elif lvl_sc == 'stats':
+        stats()
     clock.tick(FPS)
+
+total_enemies = 0
+total_gold = 0
