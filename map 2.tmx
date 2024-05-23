@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="15" height="9" tilewidth="80" tileheight="80" infinite="0" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" source="D:/Tiled_tiles/bottom.tsx"/>
+ <tileset firstgid="2" source="D:/Tiled_tiles/bush_tile 1.tsx"/>
+ <tileset firstgid="3" source="D:/Tiled_tiles/bush_tile_tower.tsx"/>
+ <tileset firstgid="4" source="D:/Tiled_tiles/grass_tile_1.tsx"/>
+ <tileset firstgid="5" source="D:/Tiled_tiles/left.tsx"/>
+ <tileset firstgid="6" source="D:/Tiled_tiles/right.tsx"/>
+ <tileset firstgid="7" source="D:/Tiled_tiles/top.tsx"/>
+ <layer id="1" name="Слой тайлов 1" width="15" height="9">
+  <data encoding="csv">
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+2,6,4,4,4,4,4,4,4,4,4,4,4,1,2,
+2,4,2,2,2,2,2,2,2,2,2,2,2,4,2,
+2,4,2,3,2,1,4,4,4,4,4,4,4,5,2,
+2,4,2,2,2,4,2,2,2,2,2,2,2,2,2,
+2,4,2,3,2,4,2,3,2,3,2,3,2,3,2,
+2,4,2,2,2,4,2,2,2,2,2,2,2,2,2,
+2,4,2,3,2,6,4,4,4,4,4,4,4,4,4,
+2,4,2,2,2,2,2,2,2,2,2,2,2,2,2
+</data>
+ </layer>
+</map>
