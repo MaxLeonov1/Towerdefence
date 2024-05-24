@@ -30,9 +30,12 @@ spawn_pos =(40, 600)
 spawn_dir = 'right'
 change_map = True
 current_spawn_amount = 15
+reward = 20
+hp = 100
+enemy_image = enemy1_image
+lvl_2_enemy = 0
 
-
-money = 10000
+money = 1000
 heathpoint = 5
 f1 = pygame.font.Font(None,36)
 f2 = pygame.font.Font(None,40)
@@ -121,23 +124,34 @@ class Arrow(pygame.sprite.Sprite):
         self.rect.y = pos[1]
         self.dir = dir
 class Spawner():
-    def __init__(self,amount,spawn_pos,spawn_dir):
+    def __init__(self,amount,spawn_pos,spawn_dir,reward,hp,image):
         self.spawn_kd = 0
         self.pos_s = spawn_pos
         self.spawn_amount = 0
         self.lvl_spaun_amount = amount
         self.spawn_dir = spawn_dir
+        self.reward = reward
+        self.hp = hp
+        self.image = image
     def spawn(self):
+        global total_lvl,lvl_2_enemy,enemy2_image
         self.spawn_kd += 1
         #print(self.lvl_spaun_amount,self.spawn_amount)
         if self.spawn_kd / FPS >= 0.8 and self.spawn_amount <= self.lvl_spaun_amount:
-            spider = Spider(enemy1_image, self.pos_s,self.spawn_dir)
-            spider_group.add(spider)
+            if lvl_2_enemy<5:
+                spider = Spider(self.image, self.pos_s,self.spawn_dir,self.reward,self.hp)
+                spider_group.add(spider)
+            if lvl_2_enemy == 5:
+                spider = Spider(enemy2_image, self.pos_s, self.spawn_dir, 50, 200)
+                spider_group.add(spider)
+                lvl_2_enemy = 0
             self.spawn_kd = 0
             self.spawn_amount+=1
+            if total_lvl == 2:
+                lvl_2_enemy+=1
 
 class Spider(pygame.sprite.Sprite):
-    def __init__(self, image, pos,spawn_dir):
+    def __init__(self, image, pos,spawn_dir,reward,hp):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.rect = self.image.get_rect()
@@ -146,7 +160,9 @@ class Spider(pygame.sprite.Sprite):
         self.dir = spawn_dir
         self.speedx = 2
         self.speedy = 0
-        self.hp = 100
+        self.hp = hp
+        self.start_hp = hp
+        self.reward = reward
 
     def damage(self):
         global heathpoint,money,total_gold,total_enemies
@@ -155,11 +171,11 @@ class Spider(pygame.sprite.Sprite):
             heathpoint -= 1
         if self.hp <= 0:
             self.kill()
-            money += 10
-            total_gold += 10
+            money += self.reward
+            total_gold += self.reward
             total_enemies += 1
 
-        if self.hp < 100 :
+        if self.hp < self.start_hp :
             width_hp = 48 * (self.hp / 100)
             pygame.draw.rect(sc, 'black', (self.rect.x - 10, self.rect.y - 13, 50, 10), 2)
             pygame.draw.rect(sc, 'green', (self.rect.x - 8, self.rect.y - 12, width_hp, 7))
@@ -429,8 +445,8 @@ def drawMaps(nameFile):
 
 
 def restart():
-    global path_group,bush_group,towerhill_group,arrow_group,spawn_pos,spawn_dir,current_spawn_amount
-    global spider_group,spider,spawner,tower_shop,tower_shop_group,tower_active_group,bullet_group,tower_shop2
+    global path_group,bush_group,towerhill_group,arrow_group,spawn_pos,spawn_dir,current_spawn_amount,spawner
+    global spider_group,spider,spawner,tower_shop,tower_shop_group,tower_active_group,bullet_group,tower_shop2,enemy1_image
     tower_shop2 = []
     path_group = pygame.sprite.Group()
     bush_group = pygame.sprite.Group()
@@ -438,7 +454,7 @@ def restart():
     arrow_group = pygame.sprite.Group()
     spider_group = pygame.sprite.Group()
     tower_shop_group = pygame.sprite.Group()
-    spawner = Spawner(current_spawn_amount,spawn_pos,spawn_dir)
+    spawner = Spawner(current_spawn_amount,spawn_pos,spawn_dir,reward,hp,enemy_image)
     tower_shop = Tower_Shop(tower_1_on_image,tower_1_off_image, (10, 730),300)
     if total_lvl == 2:
         tower_shop2 = Tower_Shop(tower_2_1_animage[0],tower_2_1_off,(85,730),400)
@@ -601,15 +617,18 @@ def lvl_completed():
     pygame.display.update()
 
 
-
-
+bug_fix = 0
 input_await = 0
+bug_fix_flag = False
 
 while True:
+    if bug_fix:
+        bug_fix += 1
+    print(total_lvl)
     if change_map:
         restart()
         drawMaps(current_map)
-        spider_group.add(Spider(enemy1_image, spawn_pos, spawn_dir))
+        spider_group.add(Spider(enemy1_image, spawn_pos, spawn_dir,reward,hp))
         change_map = not change_map
     #print(pygame.mouse.get_pressed()[0])
     input_await += 1
@@ -619,6 +638,10 @@ while True:
 
     if lvl_sc == 'menu':
         sings()
+    elif len(spider_group) == 0:
+        lvl_completed()
+        total_lvl = 2
+        money = 1500
     elif lvl_sc == 'game':
         if (pygame.key.get_pressed()[pygame.K_SPACE] == False and len(spider_group) > 0 and heathpoint>0):
             game_lvl()
@@ -636,10 +659,19 @@ while True:
         elif heathpoint <= 0:
             go_text = f3.render(f'Game Over', 1, 'white')
             sc.blit(go_text, (350, 100))
+            restart_text = f2.render('Restart', 1, 'white')
+            pygame.draw.rect(sc, (200, 200, 200), (400, 350, 400, 100))
+            sc.blit(restart_text, (420, 370))
+            if (400 <= pygame.mouse.get_pos()[0] <= 800 and 350 <= pygame.mouse.get_pos()[1] <= 450
+                    and pygame.mouse.get_pressed()[0] and input_await / FPS >= 0.5):
+                restart()
+                total_lvl = 1
+                lvl_sc = 'game'
+                prev_lvl_sc = 'game'
+                heathpoint = 5
+                bug_fix = True
             pygame.display.update()
-        elif len(spider_group) == 0:
-            lvl_completed()
-            total_lvl = 2
+
     elif lvl_sc == 'stats':
         stats()
     clock.tick(FPS)
